@@ -1,9 +1,6 @@
-use std::path::PathBuf;
-
 use clap::{Parser, Subcommand};
 
-pub mod mount;
-pub mod new;
+pub mod download;
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
