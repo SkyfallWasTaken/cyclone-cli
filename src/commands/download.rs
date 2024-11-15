@@ -22,7 +22,7 @@ pub async fn cmd(repo: String) -> Result<()> {
     let asset_names: Vec<_> = release.assets.iter().map(|a| a.name.clone()).collect();
 
     if release.assets.is_empty() {
-        eprintln!("{} this repository has no assets", "error:".red().bold());
+        eprintln!("{} this release has no assets", "error:".red().bold());
         return Ok(());
     }
 
