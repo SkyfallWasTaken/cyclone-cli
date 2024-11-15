@@ -14,6 +14,12 @@ pub async fn cmd(repo: String) -> Result<()> {
     let octocrab = octocrab::instance();
     let release = octocrab.repos(owner, repo).releases().get_latest().await?;
     let asset_names: Vec<_> = release.assets.iter().map(|a| a.name.clone()).collect();
+
+    if release.assets.is_empty() {
+        eprintln!("{} this repository has no assets", "error:".red().bold());
+        return Ok(());
+    }
+
     let selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Select an asset to download")
         .items(&asset_names)
