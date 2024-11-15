@@ -3,6 +3,7 @@ use color_eyre::Result;
 use dialoguer::{theme::ColorfulTheme, Select};
 use owo_colors::OwoColorize;
 
+use crate::smart_select::get_compatible_file_index;
 use crate::util::download_file;
 use crate::DIRS;
 
@@ -26,10 +27,11 @@ pub async fn cmd(repo: String) -> Result<()> {
         return Ok(());
     }
 
+    let default = get_compatible_file_index(&asset_names).unwrap_or(0);
     let selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Select an asset to download")
         .items(&asset_names)
-        .default(0)
+        .default(default)
         .interact()?;
 
     let asset = &release.assets[selection];

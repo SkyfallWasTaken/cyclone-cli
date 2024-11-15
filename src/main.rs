@@ -10,6 +10,7 @@ use figment::{
 
 mod commands;
 mod config;
+mod smart_select;
 pub mod util;
 use commands::{Cli, Command};
 use config::Config;
