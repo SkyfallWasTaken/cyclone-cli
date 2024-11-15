@@ -8,12 +8,22 @@ use crate::util::download_file;
 use crate::DIRS;
 
 pub async fn cmd(repo: String) -> Result<()> {
-    let (owner, repo) = repo.split_once('/').unwrap();
-    let dir = DIRS.cache_dir().join(owner).join(repo);
-    tokio::fs::create_dir_all(&dir).await?;
+    let (owner, repo_name) = repo.split_once('/').unwrap();
 
     let octocrab = octocrab::instance();
-    let Ok(release) = octocrab.repos(owner, repo).releases().get_latest().await else {
+    let Ok(repo) = octocrab.repos(owner, repo_name).get().await else {
+        eprintln!(
+            "{} failed to fetch repo; are you sure it exists?",
+            "error:".red().bold()
+        );
+        return Ok(());
+    };
+    let Ok(release) = octocrab
+        .repos(owner, repo_name)
+        .releases()
+        .get_latest()
+        .await
+    else {
         eprintln!(
             "{} failed to fetch latest release; are you sure a release exists on this repo?",
             "error:".red().bold()
@@ -36,6 +46,9 @@ pub async fn cmd(repo: String) -> Result<()> {
 
     let asset = &release.assets[selection];
     log::info!("{} {}", "Downloading".green().bold(), asset.name.bold());
+
+    let dir = DIRS.cache_dir().join(repo.id.to_string());
+    tokio::fs::create_dir_all(&dir).await?;
 
     download_file(
         asset.browser_download_url.clone(),

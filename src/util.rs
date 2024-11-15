@@ -1,3 +1,4 @@
+use color_eyre::owo_colors::OwoColorize;
 use futures_util::TryStreamExt;
 use indicatif::{HumanBytes, HumanDuration, ProgressBar, ProgressStyle};
 use reqwest::{Client, Url};
@@ -15,7 +16,11 @@ pub async fn download_file(url: Url, path: &str) -> Result<(), Box<dyn std::erro
         .progress_chars("█►-"));
 
     if total_size > 0 {
-        println!("Downloading {} ({})", path, HumanBytes(total_size));
+        println!(
+            "Downloading to {} ({})",
+            path.purple(),
+            HumanBytes(total_size)
+        );
     }
 
     let mut file = File::create(Path::new(path))?;
@@ -57,4 +62,3 @@ pub async fn download_file(url: Url, path: &str) -> Result<(), Box<dyn std::erro
 
     Ok(())
 }
-
