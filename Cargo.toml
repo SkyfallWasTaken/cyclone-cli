@@ -1,6 +1,8 @@
 [package]
 name = "cyclone-cli"
 description = "Easy-to-use CLI for GitHub Releases"
+repository = "https://github.com/SkyfallWasTaken/cyclone-cli"
+homepage = "https://github.com/SkyfallWasTaken/cyclone-cli"
 license = "MIT"
 version = "0.1.1"
 edition = "2021"
