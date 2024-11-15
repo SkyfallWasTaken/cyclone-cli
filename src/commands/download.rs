@@ -12,7 +12,13 @@ pub async fn cmd(repo: String) -> Result<()> {
     tokio::fs::create_dir_all(&dir).await?;
 
     let octocrab = octocrab::instance();
-    let release = octocrab.repos(owner, repo).releases().get_latest().await?;
+    let Ok(release) = octocrab.repos(owner, repo).releases().get_latest().await else {
+        eprintln!(
+            "{} failed to fetch latest release; are you sure a release exists on this repo?",
+            "error:".red().bold()
+        );
+        return Ok(());
+    };
     let asset_names: Vec<_> = release.assets.iter().map(|a| a.name.clone()).collect();
 
     if release.assets.is_empty() {
