@@ -2,21 +2,21 @@
 name = "cyclone-cli"
 description = "Easy-to-use CLI for GitHub Releases"
 license = "MIT"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [dependencies]
-clap = { version = "4.5.20", features = ["derive"] }
+clap = { version = "4.5.21", features = ["derive"] }
 color-eyre = "0.6.3"
 dialoguer = "0.11.0"
 directories = "5.0.1"
 env_logger = "0.11.5"
 figment = { version = "0.10.19", features = ["toml", "env"] }
 futures-util = "0.3.31"
-indicatif = "0.17.8"
+indicatif = "0.17.9"
 log = "0.4.22"
-octocrab = "0.41.2"
+octocrab = "0.42.0"
 owo-colors = "4.1.0"
 reqwest = { version = "0.12.9", features = ["stream"] }
-serde = { version = "1.0.214", features = ["derive"] }
+serde = { version = "1.0.215", features = ["derive"] }
 tokio = { version = "1.41.1", features = ["rt-multi-thread", "macros", "fs"] }
