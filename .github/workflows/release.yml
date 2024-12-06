@@ -1,33 +1,71 @@
-# .github/workflows/release.yml
-name: Release
+name: Build and Attach Binaries to Release
 
 on:
   release:
-    types: [created]
+    types:
+      - released # Trigger when a release is published
 
 jobs:
-  release:
-    name: release ${{ matrix.target }}
+  build:
+    name: Build Binaries
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
-        include:
-          - target: x86_64-pc-windows-gnu
-            archive: zip
-          - target: x86_64-unknown-linux-musl
-            archive: tar.gz tar.xz tar.zst
-          - target: x86_64-unknown-linux-gnu
-            archive: tar.gz tar.xz tar.zst
-          - target: x86_64-apple-darwin
-            archive: zip
+        platform:
+          - x86_64-unknown-linux-gnu
+          - x86_64-unknown-linux-musl
+          - x86_64-pc-windows-msvc
+          - aarch64-apple-darwin
+          - x86_64-apple-darwin
     steps:
-      - uses: actions/checkout@master
-      - name: Compile and release
-        uses: rust-build/rust-build.action@v1.4.5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
         with:
-          RUSTTARGET: ${{ matrix.target }}
-          ARCHIVE_TYPES: ${{ matrix.archive }}
-          TOOLCHAIN_VERSION: stable
+          toolchain: stable
+          override: true
+
+      - name: Install Cross (if needed)
+        run: cargo install cross --locked
+
+      - name: Build Binary
+        run: |
+          if [[ "${{ matrix.platform }}" == *"apple-darwin"* ]]; then
+            rustup target add ${{ matrix.platform }}
+            cargo build --release --target ${{ matrix.platform }}
+          else
+            cross build --release --target ${{ matrix.platform }}
+        env:
+          RUSTFLAGS: "-C target-feature=+crt-static"
+
+      - name: Prepare artifact
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.platform }}/release/your_binary_name dist/your_binary_name-${{ matrix.platform }}
+        env:
+          RUSTFLAGS: "-C target-feature=+crt-static"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries-${{ matrix.platform }}
+          path: dist/
+
+  attach:
+    name: Attach Binaries to Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: dist/
+
+      - name: Attach files to GitHub Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.event.release.tag_name }}
+          files: dist/*
