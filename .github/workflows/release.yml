@@ -46,12 +46,14 @@ jobs:
          args: cross --locked
 
      - name: Build Binary
-       uses: actions-rs/cargo@v1
-       with:
-         command: ${{ matrix.use-cross && 'cross' || 'build' }}
-         args: --release --target ${{ matrix.platform }}
+       run: |
+        if [ "${{ matrix.use-cross }}" = "true" ]; then
+         cross build --release --target ${{ matrix.platform }}
+        else
+         cargo build --release --target ${{ matrix.platform }}
+        fi
        env:
-         RUSTFLAGS: "-C target-feature=+crt-static"
+        RUSTFLAGS: "-C target-feature=+crt-static"
 
      - name: Prepare artifact
        run: |
