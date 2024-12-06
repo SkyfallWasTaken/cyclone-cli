@@ -46,7 +46,7 @@ jobs:
        run: cargo binstall cross -y
 
      - name: Install OpenSSL
-       if: ${{ matrix.os != "macos-latest" }}
+       if: ${{ !contains(matrix.os, 'macos') }}
        run: sudo apt install libssl-dev
 
      - name: Build Binary
