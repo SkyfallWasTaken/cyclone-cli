@@ -1,6 +1,7 @@
-name: Build and Attach Binaries to Release
+name: Upload artifacts for release
 
 on:
+  workflow_dispatch:
   release:
     types:
       - released # Trigger when a release is published
@@ -37,13 +38,14 @@ jobs:
             cargo build --release --target ${{ matrix.platform }}
           else
             cross build --release --target ${{ matrix.platform }}
+          fi
         env:
           RUSTFLAGS: "-C target-feature=+crt-static"
 
       - name: Prepare artifact
         run: |
           mkdir -p dist
-          cp target/${{ matrix.platform }}/release/your_binary_name dist/your_binary_name-${{ matrix.platform }}
+          cp target/${{ matrix.platform }}/release/cyclone-cli dist/cyclone-cli-${{ matrix.platform }}
         env:
           RUSTFLAGS: "-C target-feature=+crt-static"
 
