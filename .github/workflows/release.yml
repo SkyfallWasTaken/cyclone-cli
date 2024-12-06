@@ -39,11 +39,15 @@ jobs:
          target: ${{ matrix.platform }}
          override: true
 
+     - name: Install cargo binstall 
+       uses: cargo-bins/cargo-binstall@main
+
      - name: Install Cross
-       uses: actions-rs/cargo@v1
-       with:
-         command: install
-         args: cross --locked
+       run: cargo binstall cross -y
+
+     - name: Install OpenSSL
+       if: ${{ matrix.os != "macos-latest" }}
+       run: sudo apt install libssl-dev
 
      - name: Build Binary
        run: |
