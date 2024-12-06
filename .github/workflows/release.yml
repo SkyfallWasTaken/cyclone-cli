@@ -1,4 +1,5 @@
 # .github/workflows/release.yml
+name: Release
 
 on:
   release:
@@ -16,6 +17,8 @@ jobs:
             archive: zip
           - target: x86_64-unknown-linux-musl
             archive: tar.gz tar.xz tar.zst
+          - target: x86_64-unknown-linux-gnu
+            archive: tar.gz tar.xz tar.zst
           - target: x86_64-apple-darwin
             archive: zip
     steps:
@@ -23,8 +26,8 @@ jobs:
       - name: Compile and release
         uses: rust-build/rust-build.action@v1.4.5
         env:
-          TOOLCHAIN_VERSION: stable
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           RUSTTARGET: ${{ matrix.target }}
           ARCHIVE_TYPES: ${{ matrix.archive }}
+          TOOLCHAIN_VERSION: stable
