@@ -1,97 +1,41 @@
-name: Build and Release Binaries
+name: Release
+
+permissions:
+  contents: write
 
 on:
- workflow_dispatch:
- release:
-   types: [published]
+  workflow_dispatch:
+  push:
+    tags:
+      - v[0-9]+.*
 
 jobs:
- build:
-   name: Build Binaries
-   runs-on: ${{ matrix.os }}
-   strategy:
-     matrix:
-       include:
-         - platform: x86_64-unknown-linux-gnu
-           os: ubuntu-latest
-           use-cross: true
-         - platform: x86_64-unknown-linux-musl
-           os: ubuntu-latest
-           use-cross: true
-         - platform: x86_64-pc-windows-gnu
-           os: ubuntu-latest
-           use-cross: true
-         - platform: aarch64-apple-darwin
-           os: macos-latest
-           use-cross: false
-         - platform: x86_64-apple-darwin
-           os: macos-latest
-           use-cross: false
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/create-gh-release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-   steps:
-     - name: Checkout code
-       uses: actions/checkout@v4
-
-     - name: Set up Rust
-       uses: actions-rs/toolchain@v1
-       with:
-         toolchain: stable
-         target: ${{ matrix.platform }}
-         override: true
-
-     - name: Install cargo binstall 
-       uses: cargo-bins/cargo-binstall@main
-
-     - name: Install Cross
-       run: cargo binstall cross -y
-
-     - name: Install OpenSSL
-       if: ${{ !contains(matrix.os, 'macos') }}
-       run: sudo apt install libssl-dev
-
-     - name: Build Binary
-       run: |
-        if [ "${{ matrix.use-cross }}" = "true" ]; then
-         cross build --release --target ${{ matrix.platform }}
-        else
-         cargo build --release --target ${{ matrix.platform }}
-        fi
-       env:
-        RUSTFLAGS: "-C target-feature=+crt-static"
-
-     - name: Prepare artifact
-       run: |
-         mkdir -p dist
-         cp target/${{ matrix.platform }}/release/cyclone-cli dist/cyclone-cli-${{ matrix.platform }}
-         chmod +x dist/cyclone-cli-${{ matrix.platform }}
-
-     - name: Upload artifact
-       uses: actions/upload-artifact@v4
-       with:
-         name: binary-${{ matrix.platform }}
-         path: dist/
-         retention-days: 1
-
- attach:
-   name: Attach Binaries to Release
-   needs: build
-   runs-on: ubuntu-latest
-   steps:
-     - name: Download artifacts
-       uses: actions/download-artifact@v4
-       with:
-         path: dist/
-         merge-multiple: true
-
-     - name: Generate SHA256 checksums
-       run: |
-         cd dist
-         sha256sum cyclone-cli-* > cyclone-cli-SHA256SUMS.txt
-
-     - name: Attach files to GitHub Release
-       uses: svenstaro/upload-release-action@v2
-       with:
-         repo_token: ${{ secrets.GITHUB_TOKEN }}
-         file_glob: true
-         file: dist/*
-         tag: ${{ github.ref_name }}
+  upload-assets:
+    needs: create-release
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: cyclone-cli
+          target: ${{ matrix.target }}
+          tar: unix
+          zip: windows
+          token: ${{ secrets.GITHUB_TOKEN }}
